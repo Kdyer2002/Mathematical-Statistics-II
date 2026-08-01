@@ -1,0 +1,328 @@
+---
+title: "Assignment 6: Constructing Likelihood Ratio Confidence Interval"
+author: "Kayla Dyer"
+date: " Due: March 24, 2026 (approved for later)"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: no
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    highlight: monochrome
+    theme: spacelab
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body { background-color:white; }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("pander")) {
+   install.packages("pander")
+   library(pander)
+}
+if (!require("ggplot2")) {
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if (!require("tidyverse")) {
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+if (!require("plotly")) {
+  install.packages("plotly")
+  library(plotly)
+}
+
+if (!require("VGAM")) {
+  install.packages("VGAM")
+  library(VGAM)
+}
+#### VGAM
+knitr::opts_chunk$set(echo = TRUE,       # include code chunk in the output file
+                      warning = FALSE,   # sometimes, you code may produce warning messages,
+                                         # you can choose to include the warning messages in
+                                         # the output file. 
+                      results = TRUE,    # you can also decide whether to include the output
+                                         # in the output file.
+                      message = FALSE,
+                      comment = NA
+                      )  
+```
+ 
+ \
+ 
+## **Assignment Objectives** 
+
+* Reinforce the likelihood concepts and MLE.
+
+* Understand the concepts of confidence intervals.
+
+* Master the process of finding likelihood ratio confidence interval of unknown parameter.
+
+\
+
+## **Policies of Using AI Tools**
+
+**Policy on AI Tool Use**: You must adhere to the AI tool policy specified in the course syllabus. The direct copying of AI-generated content is strictly prohibited. All submitted work must reflect your own understanding; where external tools are consulted, content must be thoroughly rephrased and synthesized in your own words.
+
+**Code Inclusion Requirement**: Any code included in your essay must be properly commented to explain the purpose and/or expected output of key code lines. Submitting AI-generated code without meaningful, student-added comments will not be accepted.
+
+\
+
+**One Parameter Lindley Distribution**
+
+The **Lindley distribution** is a **continuous probability distribution** proposed by D.V. Lindley in 1958. It represents a **weighted mixture** of exponential and gamma distributions, providing a flexible single-parameter model for lifetime data. 
+
+$$
+f(x;\theta) = \frac{\theta^2}{1+\theta}(1+x)e^{-\theta x}, \quad x > 0, \quad \theta > 0
+$$
+
+where $x$ = random variable (e.g., time, size, amount) and $\theta$ = shape parameter controlling the distribution.
+
+Given an independent random sample $X_1, X_2, \dots, X_n$:
+
+$$
+L(\theta) = \prod_{i=1}^n f(x_i;\theta) = \prod_{i=1}^n \left[ \frac{\theta^2}{1+\theta} (1 + x_i) e^{-\theta x_i} \right].
+$$
+
+Let $S = \sum_{i=1}^n x_i$, $\bar{x} = S/n$,  and $C = \sum_{i=1}^n \ln(1 + x_i)$ (constant with respect to $\theta$):
+
+$$
+\ell(\theta) = \ln L(\theta) = n \ln\left( \frac{\theta^2}{1+\theta} \right) + C - \theta S.
+$$
+
+After some algebra, we obtain the closed form of the MLE of $\theta$ in the following
+
+$$
+\boxed{\hat{\theta} = \frac{1 - \bar{x} + \sqrt{\bar{x}^2 + 6\bar{x} + 1}}{2\bar{x}}}
+$$
+
+As good exercise, we can derive the following Fisher information of $\theta$:
+
+$$
+\boxed{I(\theta) = \frac{2}{\theta^2} - \frac{1}{(1+\theta)^2}}
+$$
+
+
+\
+
+<font color = "blue">**This assignment focuses on constructing various confidence intervals of the shape parameter $\theta$ in the Lindley distribution.**</font>
+
+
+\
+
+## **Question: Customer Service Times (minutes)**
+
+The customer service call duration data set originates from a major telecommunications provider in North America, operating in a highly competitive market where:
+
+```
+3.2, 5.8, 7.1, 4.5, 10.3, 6.2, 8.7, 5.1, 12.5, 6.9,
+9.4, 5.7, 11.8, 4.9, 9.1, 6.5, 13.2, 7.8, 10.6, 6.1,
+8.9, 5.4, 12.1, 7.3, 9.8, 5.9, 11.4, 6.8, 10.9, 7.5,
+4.2, 8.3, 6.4, 14.1, 5.6, 9.7, 7.9, 11.1, 6.7, 10.2,
+5.3, 8.6, 7.2, 12.9, 6.3, 9.3, 8.1, 13.7, 7.6, 10.8
+```
+
+```{r}
+times <- c(
+  3.2, 5.8, 7.1, 4.5, 10.3, 6.2, 8.7, 5.1, 12.5, 6.9,
+  9.4, 5.7, 11.8, 4.9, 9.1, 6.5, 13.2, 7.8, 10.6, 6.1,
+  8.9, 5.4, 12.1, 7.3, 9.8, 5.9, 11.4, 6.8, 10.9, 7.5,
+  4.2, 8.3, 6.4, 14.1, 5.6, 9.7, 7.9, 11.1, 6.7, 10.2,
+  5.3, 8.6, 7.2, 12.9, 6.3, 9.3, 8.1, 13.7, 7.6, 10.8
+)
+
+n <- length(times)
+S <- sum(times)
+xbar <- mean(times)
+
+c(n = n, S = S, xbar = xbar)
+```
+
+From the data, we compute the basic summaries needed for the analysis: n = 50, S = 415.4, and x̄ = 8.308. These values will be used in constructing the estimators and confidence intervals.
+
+Assuming the data follow a one-parameter Lindley distribution, construct a $95\%$ confidence interval for the parameter $\theta$ using the provided data and the specified methods. For each of the following questions, first describe your reasoning process for the analysis, then write code to perform the actual analysis. Finally, summarize the results to conclude the question.
+
+
+a) Construct a **95% asymptotic confidence interval** based on the asymptotic sampling distribution of the maximum likelihood estimator (MLE) of $\theta$.
+
+To construct the asymptotic confidence interval, I use the fact that the MLE is approximately normal for large samples. Using the expressions for the MLE and Fisher information provided above, I estimate the variance by plugging in the MLE for $\theta$. This gives a standard error, and I then use the normal critical value 1.96 to form the 95% confidence interval.
+
+```{r}
+## Compute MLE of Theta Using Given Formula
+theta_hat <- (1 - xbar + sqrt(xbar^2 + 6 * xbar + 1)) / (2 * xbar)
+
+## Define Fisher Information Function
+I_theta <- function(theta) {
+  2 / theta^2 - 1 / (1 + theta)^2
+}
+
+## Compute Standard Error Using Plug-in Estimate
+se_theta_hat <- sqrt(1 / (n * I_theta(theta_hat)))
+
+## Obtain 95% Normal Critical Value
+z_crit <- qnorm(0.975)
+
+## Construct Asymptotic Confidence Interval
+ci_asym <- theta_hat + c(-1, 1) * z_crit * se_theta_hat
+
+theta_hat
+se_theta_hat
+ci_asym
+```
+
+The 95% asymptotic confidence interval for $\theta$ is (0.1758, 0.2624). This interval represents the range of values for $\theta$ that are consistent with the observed data. The relatively narrow width of the interval suggests a small standard error and a stable estimate.
+
+b) Construct a **95% likelihood ratio confidence interval** for $\theta$.
+
+For the likelihood ratio confidence interval, I work with the log-likelihood and look for values of $\theta$ that are close enough to the maximum. Based on the lecture, this means finding where the log-likelihood stays within the cutoff determined by the chi-square value. Since this does not simplify to a closed-form solution, I solve for the endpoints numerically.
+
+```{r}
+## Define Log-Likelihood Function
+loglik_theta <- function(theta) {
+  n * log(theta^2 / (1 + theta)) + sum(log(1 + times)) - theta * S
+}
+
+## Compute Likelihood Ratio Cutoff
+lr_cutoff <- loglik_theta(theta_hat) - qchisq(0.95, df = 1) / 2
+
+## Define Root Function for Endpoints
+lr_root <- function(theta) {
+  loglik_theta(theta) - lr_cutoff
+}
+
+## Solve for Lower and Upper Endpoints
+theta_L <- uniroot(lr_root, interval = c(0.01, theta_hat))$root
+theta_U <- uniroot(lr_root, interval = c(theta_hat, 1))$root
+
+## Construct Likelihood Ratio Confidence Interval
+ci_lr <- c(theta_L, theta_U)
+
+ci_lr
+```
+
+The 95% likelihood ratio confidence interval for $\theta$ is (0.1786, 0.2653). This interval represents the range of values for $\theta$ that are consistent with the observed data under the model. The narrow width of the interval reflects a stable estimate.
+
+c) Assuming the two confidence intervals above are valid, compare them in terms of performance and make a recommendation. Justify your recommendation.
+
+The two confidence intervals are very similar in both location and width, so they lead to essentially the same conclusion about $\theta$. The asymptotic interval is easier to compute but relies on the normal approximation, while the likelihood ratio interval is based directly on the likelihood function. For this reason, I would recommend the likelihood ratio interval, although the difference between the two is small.
+
+```{r}
+## Compare Interval Widths
+width_asym <- diff(ci_asym)
+width_lr <- diff(ci_lr)
+
+width_asym
+width_lr
+```
+
+The asymptotic and likelihood ratio confidence intervals have very similar widths, with values 0.08658742 and 0.08668721, respectively. This indicates that both methods provide nearly the same level of precision for estimating $\theta$. Since the likelihood ratio interval is based directly on the likelihood function, I would recommend it, although the difference between the two methods is minimal.

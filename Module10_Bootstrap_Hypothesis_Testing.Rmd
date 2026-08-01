@@ -1,0 +1,461 @@
+---
+title: "Assignment 10: Bootstrap Hypothesis Testing"
+author: "Kayla Dyer"
+date: " Due: April 21, 2026"
+output:
+  html_document: 
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+    number_sections: no
+    toc_collapsed: yes
+    code_folding: hide
+    code_download: yes
+    smooth_scroll: yes
+    highlight: monochrome
+    theme: spacelab
+  word_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    keep_md: yes
+  pdf_document: 
+    toc: yes
+    toc_depth: 4
+    fig_caption: yes
+    number_sections: yes
+    fig_width: 3
+    fig_height: 3
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{css, echo = FALSE}
+#TOC::before {
+  content: "Table of Contents";
+  font-weight: bold;
+  font-size: 1.2em;
+  display: block;
+  color: navy;
+  margin-bottom: 10px;
+}
+
+
+div#TOC li {     /* table of content  */
+    list-style:upper-roman;
+    background-image:none;
+    background-repeat:none;
+    background-position:0;
+}
+
+h1.title {    /* level 1 header of title  */
+  font-size: 22px;
+  font-weight: bold;
+  color: DarkRed;
+  text-align: center;
+  font-family: "Gill Sans", sans-serif;
+}
+
+h4.author { /* Header 4 - and the author and data headers use this too  */
+  font-size: 15px;
+  font-weight: bold;
+  font-family: system-ui;
+  color: navy;
+  text-align: center;
+}
+
+h4.date { /* Header 4 - and the author and data headers use this too  */
+  font-size: 18px;
+  font-weight: bold;
+  font-family: "Gill Sans", sans-serif;
+  color: DarkBlue;
+  text-align: center;
+}
+
+h1 { /* Header 1 - and the author and data headers use this too  */
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: center;
+}
+
+h2 { /* Header 2 - and the author and data headers use this too  */
+    font-size: 18px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h3 { /* Header 3 - and the author and data headers use this too  */
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: navy;
+    text-align: left;
+}
+
+h4 { /* Header 4 - and the author and data headers use this too  */
+    font-size: 14px;
+  font-weight: bold;
+    font-family: "Times New Roman", Times, serif;
+    color: darkred;
+    text-align: left;
+}
+
+/* Add dots after numbered headers */
+.header-section-number::after {
+  content: ".";
+
+body {background-color: #ffffff;
+      color: #000000;
+      font-family: Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      }
+
+.highlightme { background-color:yellow; }
+
+p { background-color:white; }
+
+}
+```
+
+```{r setup, include=FALSE}
+# code chunk specifies whether the R code, warnings, and output 
+# will be included in the output files.
+if (!require("knitr")) {
+   install.packages("knitr")
+   library(knitr)
+}
+if (!require("pander")) {
+   install.packages("pander")
+   library(pander)
+}
+if (!require("ggplot2")) {
+  install.packages("ggplot2")
+  library(ggplot2)
+}
+if (!require("tidyverse")) {
+  install.packages("tidyverse")
+  library(tidyverse)
+}
+
+if (!require("plotly")) {
+  install.packages("plotly")
+  library(plotly)
+}
+
+if (!require("VGAM")) {
+  install.packages("VGAM")
+  library(VGAM)
+}
+#### VGAM
+knitr::opts_chunk$set(echo = TRUE,       # include code chunk in the output file
+                      warning = FALSE,   # sometimes, you code may produce warning messages,
+                                         # you can choose to include the warning messages in
+                                         # the output file. 
+                      results = TRUE,    # you can also decide whether to include the output
+                                         # in the output file.
+                      message = FALSE,
+                      comment = NA
+                      )  
+```
+ 
+ \
+ 
+## **Assignment Objectives** 
+
+<p>
+* Enhance understanding the procedure of Bootstrap hypothesis testing.
+
+* Implement the procedures for detecting overfitting/underfitting issues in practical applications using bootstrap likelihood ratio test.
+</p>
+
+
+## **Policies of Using AI Tools**
+
+<p>
+**Policy on AI Tool Use**: Please adhere to the AI tool policy specified in the course syllabus. The direct copying of AI-generated content is strictly prohibited. All submitted work must reflect your own understanding; where external tools are consulted, content must be thoroughly rephrased and synthesized in your own words.
+</p>
+
+<p>
+**Code Inclusion Requirement**: Any code included in your essay must be properly commented to explain the purpose and/or expected output of key code lines. Submitting AI-generated code without meaningful, student-added comments will not be accepted.
+</p>
+
+
+
+
+## Testing Overfitting/Underfitting
+
+In Machine Learning and Statistics, overfitting occurs when a model is too complex and learns noise, leading to poor performance on new data, while underfitting happens when a model is too simple to capture important patterns, resulting in high errors overall; both issues are explained by the Bias–Variance Tradeoff and can cause unreliable predictions in real-world applications.
+
+
+The probability density function (PDF) of the Weibull distribution is:
+
+$$
+f(t; \lambda, \beta) = \frac{\beta}{\lambda} \left( \frac{t}{\lambda} \right)^{\beta-1} \exp\left[ -\left( \frac{t}{\lambda} \right)^\beta \right], \quad t \ge 0
+$$
+where $\lambda > 0$ is the scale parameter (characteristic life) and $\beta > 0$ is the shape parameter.
+
+When $\beta = 1$, the Weibull PDF simplifies to the exponential PDF:
+
+$$
+f(t; \lambda) = \frac{1}{\lambda} \exp\left( -\frac{t}{\lambda} \right)
+$$
+with constant hazard rate $h(t) = 1/\lambda$.
+
+
+<p><font color = "darkred">**This assignment focuses on performing a hypothesis test for the shape parameter ($\beta$) of the Weibull distribution within a reliability mode**</font></p>
+
+
+\begin{align}
+H_0&: \beta = 1 \quad \text{(Exponential model, simpler)} \\
+H_1&: \beta \neq 1 \quad \text{(Weibull model, more complex)}
+\end{align}
+
+
+
+## Steps of the BLRT
+
+
+* Fit models under $H_0$ and $H_1$} to the original data, compute $\Lambda_{\text{obs}}$.
+
+* Generate bootstrap samples under $H_0$}: 
+  + Estimate parameters under $H_0$ from the original data.
+  + Generate $B$ datasets by sampling from the model under $H_0$ (parametric bootstrap) or by resampling residuals/cases (nonparametric bootstrap; parametric is common for BLRT).
+
+* For each bootstrap sample $b = 1,\dots,B$:
+  + Fit $H_0$ and $H_1$ models.
+  + Compute $\Lambda_b = -2[\ell_{0,b} - \ell_{1,b}]$.
+
+* Approximate p-value:
+
+$$
+  p = \frac{1}{B} \sum_{b=1}^B I(\Lambda_b \ge \Lambda_{\text{obs}})
+$$
+(Often a small adjustment is made for stability: $(1 + \#\{\Lambda_b \ge \Lambda_{\text{obs}}\})/(B+1)$).
+
+
+
+\
+
+## **Question: Reliability Application**
+
+<p>
+A wind energy company monitors the reliability of gearboxes in 75 identical wind turbines located in a coastal wind farm. The gearbox is a critical component; its failure often leads to costly downtime and repairs. Previous studies suggest that the hazard rate (failure risk) may increase over time due to mechanical wear (fatigue, pitting, bearing degradation). Engineers want to test whether the failure time distribution follows an exponential model (constant hazard, random failures) or a Weibull model with shape parameter $k>1$ (increasing hazard, indicative of aging/degradation). The failure times (in months) are:
+
+```
+   5.2,  7.8,  9.1, 11.3, 12.5, 13.0, 14.2, 15.1, 15.9, 16.7, 17.2, 17.8, 18.4, 18.9, 
+  19.3, 19.7, 20.2, 20.6, 21.0, 21.5, 21.9, 22.3, 22.7, 23.1, 23.5, 23.9, 24.3, 24.7, 
+  25.1, 25.5, 25.9, 26.3, 26.7, 27.1, 27.5, 27.9, 28.3, 28.7, 29.1, 29.5, 29.9, 30.3, 
+  30.7, 31.1, 31.5, 31.9, 32.3, 32.7, 33.1, 33.5, 33.9, 34.3, 34.7, 35.1, 35.5, 35.9, 
+  36.3, 36.7, 37.1, 37.5, 37.9, 38.3, 38.7, 39.1, 39.5, 39.9, 40.3, 40.7, 41.1, 41.5,
+  41.9, 42.3, 42.7, 43.1, 43.5
+```
+
+```{r}
+# Store the 75 failure times as a numeric vector for analysis
+failure_times <- c(
+  5.2, 7.8, 9.1, 11.3, 12.5, 13.0, 14.2, 15.1, 15.9, 16.7,
+  17.2, 17.8, 18.4, 18.9, 19.3, 19.7, 20.2, 20.6, 21.0, 21.5,
+  21.9, 22.3, 22.7, 23.1, 23.5, 23.9, 24.3, 24.7, 25.1, 25.5,
+  25.9, 26.3, 26.7, 27.1, 27.5, 27.9, 28.3, 28.7, 29.1, 29.5,
+  29.9, 30.3, 30.7, 31.1, 31.5, 31.9, 32.3, 32.7, 33.1, 33.5,
+  33.9, 34.3, 34.7, 35.1, 35.5, 35.9, 36.3, 36.7, 37.1, 37.5,
+  37.9, 38.3, 38.7, 39.1, 39.5, 39.9, 40.3, 40.7, 41.1, 41.5,
+  41.9, 42.3, 42.7, 43.1, 43.5
+)
+```
+
+</p>
+
+This assignment focuses on hypothesis $H_0: \beta = 1$ (exponential) against $H_1: \beta \neq 1$ (Weibull). This framework detects overfitting (fitting a Weibull when exponential is true) and underfitting (fitting exponential when Weibull with $\beta \neq 1$ is true). 
+
+
+<p>
+a). Find the MLE of the Weibull parameters $\lambda$ (scale) and $\beta$ (shape), denoted by $\hat{\lambda}$ and $\hat{\beta}$, respectively, using the `optim()` procedure. [*Hint: You should provide explicit expressions for the log-likelihood and gradient functions of the Weibull distribution parameters.*]
+
+```{r}
+# Number of observations in the dataset
+n <- length(failure_times)
+
+# Define the Weibull log-likelihood function
+weibull_loglik <- function(par, data) {
+  lambda <- par[1]
+  beta   <- par[2]
+  n <- length(data)
+  
+  if (lambda <= 0 || beta <= 0) return(-Inf)
+  
+  ll <- n * log(beta) -
+        n * beta * log(lambda) +
+        (beta - 1) * sum(log(data)) -
+        sum((data / lambda)^beta)
+  
+  return(ll)
+}
+
+# Define negative log-likelihood for minimization
+weibull_nll <- function(par, data) {
+  -weibull_loglik(par, data)
+}
+
+# Define gradient of the negative log-likelihood
+weibull_grad_nll <- function(par, data) {
+  lambda <- par[1]
+  beta   <- par[2]
+  n <- length(data)
+  
+  term <- (data / lambda)^beta
+  
+  d_ll_d_lambda <- (beta / lambda) * (sum(term) - n)
+  
+  d_ll_d_beta <- n / beta -
+                 n * log(lambda) +
+                 sum(log(data)) -
+                 sum(term * log(data / lambda))
+  
+  -c(d_ll_d_lambda, d_ll_d_beta)
+}
+```
+
+```{r}
+# Choose reasonable starting values
+start_vals <- c(mean(failure_times), 1)
+
+# Run optim() to estimate Weibull parameters
+fit_weibull <- optim(
+  par = start_vals,
+  fn = weibull_nll,
+  gr = weibull_grad_nll,
+  data = failure_times,
+  method = "L-BFGS-B",
+  lower = c(1e-8, 1e-8)
+)
+```
+
+```{r}
+# Extract estimated parameter values
+lambda_hat_weibull <- fit_weibull$par[1]
+beta_hat_weibull   <- fit_weibull$par[2]
+
+lambda_hat_weibull
+beta_hat_weibull
+```
+
+Using the optim() procedure, the MLE of the Weibull parameters are $\hat{\lambda} = 31.4182$ and $\hat{\beta} = 3.370781$.
+
+b). Find the MLE of the exponential parameter $\lambda$ (scale), denoted by $\hat{\lambda}$, using any procedure. [*Hint: You should provide explicit expressions for the log-likelihood and gradient functions of the exponential distribution parameters.*]
+
+```{r}
+# Exponential log-likelihood function
+exp_loglik <- function(lambda, data) {
+  n <- length(data)
+  
+  if (lambda <= 0) return(-Inf)
+  
+  ll <- -n * log(lambda) - sum(data) / lambda
+  
+  return(ll)
+}
+
+# Gradient of the exponential log-likelihood
+exp_grad <- function(lambda, data) {
+  n <- length(data)
+  
+  grad <- -n / lambda + sum(data) / (lambda^2)
+  
+  return(grad)
+}
+```
+
+```{r}
+# Compute the exponential MLE
+lambda_hat_exp <- mean(failure_times)
+
+lambda_hat_exp
+```
+
+Using the exponential log-likelihood and gradient function, the MLE of the exponential scale parameter is $\hat{\lambda} = 28.18533$.
+
+c). Use a) and b) to perform the regular likelihood ratio $\chi^2$ test for $\beta = 1$ and report the p-value.
+
+```{r}
+# Weibull log-likelihood at the MLEs
+loglik_weibull <- weibull_loglik(c(lambda_hat_weibull, beta_hat_weibull), failure_times)
+
+# Exponential log-likelihood under beta = 1
+loglik_exp <- exp_loglik(lambda_hat_exp, failure_times)
+
+# Likelihood ratio test statistic
+lrt_stat <- 2 * (loglik_weibull - loglik_exp)
+
+# Chi-square p-value with 1 degree of freedom
+p_value_lrt <- 1 - pchisq(lrt_stat, df = 1)
+
+lrt_stat
+p_value_lrt
+```
+
+Using the likelihood ratio test, the test statistic is $-2\log\Lambda = 100.6144$ and the p-value is approximately $0$, which is statistically significant at the $\alpha = 0.05$ level. Therefore, I reject $H_0:\beta=1$.
+
+d). Use the BLRT algorithm to perform a bootstrap likelihood ratio test and report the bootstrap p-value. Note that you are expected to translate the BLRT algorithm into R code to perform the BLRT. [*Hint: The chi-square distribution should not be used in this part of the analysis.*]
+
+```{r}
+# Set a seed for reproducibility
+set.seed(123)
+
+# Number of bootstrap samples
+B <- 999
+
+# Store bootstrap test statistics
+lrt_boot <- numeric(B)
+
+# Generate bootstrap samples under the null model
+for (b in 1:B) {
+  bs_sample <- rexp(length(failure_times), rate = 1 / lambda_hat_exp)
+  
+  weibull_fit_bs <- optim(
+    par = c(mean(bs_sample), 1),
+    fn = weibull_nll,
+    gr = weibull_grad_nll,
+    data = bs_sample,
+    method = "L-BFGS-B",
+    lower = c(1e-8, 1e-8)
+  )
+  
+  lambda_hat_bs <- weibull_fit_bs$par[1]
+  beta_hat_bs   <- weibull_fit_bs$par[2]
+  
+  lambda_hat_exp_bs <- mean(bs_sample)
+  
+  loglik_weibull_bs <- weibull_loglik(c(lambda_hat_bs, beta_hat_bs), bs_sample)
+  loglik_exp_bs <- exp_loglik(lambda_hat_exp_bs, bs_sample)
+  
+  lrt_boot[b] <- 2 * (loglik_weibull_bs - loglik_exp_bs)
+}
+
+# Bootstrap p-value
+p_value_blrt <- (sum(lrt_boot >= lrt_stat) + 1) / (B + 1)
+
+p_value_blrt
+```
+
+Using the BLRT algorithm, the bootstrap p-value is $0.001$, which is statistically significant at the $\alpha = 0.05$ level. Therefore, I reject $H_0:\beta=1$.
+
+e). Write a summary of the above analyses to address the following:
+
+* Whether the two tests generated the same results.
+
+* Which model is recommended for the data.
+
+Both the regular likelihood ratio $\chi^2$ test and the bootstrap likelihood ratio test (BLRT) gave the same result. In both cases, the p-values were extremely small, so the results are statistically significant at the $\alpha = 0.05$ level and we reject $H_0:\beta=1$. This matches what we saw in lecture, where the BLRT is used to confirm the $\chi^2$ approximation, and in this case they agree.
+
+Since the exponential model corresponds to $\beta = 1$, rejecting $H_0$ suggests that the exponential model does not fit the data well. The Weibull model allows $\beta \ne 1$ and is more flexible, so it provides a better fit for the data. Therefore, the Weibull model is recommended.
+
+</p>
+
+
+
