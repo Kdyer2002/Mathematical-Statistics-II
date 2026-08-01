@@ -4,15 +4,16 @@ This repository contains programming projects and assignments completed througho
 
 ## Course Topics
 
-* Assignment 1: Probability Distributions and Their Non-parametric Estimations
-* Assignment 2: Exact and Asymptotic Sampling Distributions
-* Assignment 4: Method of Moments Estimation
-* Assignment 5: Maximum Likelihood Estimation
-* Assignment 6: Confidence Intervals
-* Assignment 7: Bootstrap Confidence Intervals
-* Assignment 8: The Basics of Hypothesis Testing
-* Assignment 9: Likelihood-based Chi-Square Tests
-* Assignment 10: Bootstrap Hypothesis Testing
+* Module 1: Probability Distributions and Their Non-parametric Estimations
+* Module 2: Exact and Asymptotic Sampling Distributions
+* Module 4: Method of Moments Estimation
+* Module 5: Maximum Likelihood Estimation
+* Midterm Project: Comprehensive Statistical Inference Analysis
+* Module 6: Confidence Intervals
+* Module 7: Bootstrap Confidence Intervals
+* Module 8: The Basics of Hypothesis Testing
+* Module 9: Likelihood-based Chi-Square Tests
+* Module 10: Bootstrap Hypothesis Testing
 * Final Project: Comprehensive Statistical Inference Analysis
 
 ## Technical Skills
