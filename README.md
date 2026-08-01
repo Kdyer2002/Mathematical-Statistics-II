@@ -38,4 +38,5 @@ This repository contains programming projects and assignments completed througho
 ## Author
 
 **Kayla Dyer**
+
 *M.S. in Applied Statistics – Biostatistics and Bioinformatics Concentration*
